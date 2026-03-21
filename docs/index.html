@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>/live-workshop - Live Workshop Assistant Skill for Claude Code</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1117;--bg-card:#161b22;--bg-card-hover:#1c2333;
+    --cyan:#00d4ff;--magenta:#ff6eb4;--green:#00ff88;--yellow:#ffd866;
+    --text:#e6edf3;--text-muted:#8b949e;--text-dim:#484f58;
+    --border:#30363d;--glow-cyan:0 0 20px rgba(0,212,255,.15);
+    --glow-magenta:0 0 20px rgba(255,110,180,.15);
+    --glow-green:0 0 20px rgba(0,255,136,.15);
+    --mono:'SF Mono','Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+    --sans:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--sans);
+    line-height:1.6;overflow-x:hidden;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,212,255,.08),transparent),
+      radial-gradient(ellipse 60% 40% at 80% 100%,rgba(255,110,180,.06),transparent);
+  }
+
+  /* ── UTILITIES ── */
+  .container{max-width:1200px;margin:0 auto;padding:0 24px}
+  .accent-cyan{color:var(--cyan)}
+  .accent-magenta{color:var(--magenta)}
+  .accent-green{color:var(--green)}
+  .accent-yellow{color:var(--yellow)}
+  .mono{font-family:var(--mono)}
+
+  /* ── HERO ── */
+  .hero{
+    text-align:center;padding:80px 24px 48px;position:relative;
+  }
+  .hero::after{
+    content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;
+    background:linear-gradient(90deg,transparent,var(--cyan),var(--magenta),transparent);
+  }
+  .hero-badge{
+    display:inline-block;
+    background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(255,110,180,.12));
+    border:1px solid rgba(0,212,255,.25);border-radius:100px;
+    padding:6px 20px;font-size:13px;font-family:var(--mono);
+    color:var(--cyan);letter-spacing:.5px;margin-bottom:24px;
+    text-transform:uppercase;
+  }
+  .hero h1{
+    font-size:clamp(2rem,5vw,3.5rem);font-weight:800;
+    letter-spacing:-.02em;margin-bottom:8px;
+    background:linear-gradient(135deg,var(--cyan),var(--magenta));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .hero h1 span{
+    -webkit-text-fill-color:var(--text);font-weight:400;
+  }
+  .hero-subtitle{
+    font-size:clamp(.95rem,2vw,1.25rem);max-width:700px;margin:0 auto;
+    color:var(--text-muted);line-height:1.5;
+  }
+  .hero-subtitle em{
+    font-style:normal;color:var(--green);
+  }
+
+  /* ── SECTION HEADINGS ── */
+  .section-heading{
+    text-align:center;margin-bottom:48px;
+  }
+  .section-heading h2{
+    font-size:clamp(1.3rem,3vw,1.8rem);font-weight:700;
+    margin-bottom:8px;
+  }
+  .section-heading p{color:var(--text-muted);font-size:.95rem}
+  .section-heading .line{
+    width:60px;height:3px;margin:12px auto 0;border-radius:2px;
+    background:linear-gradient(90deg,var(--cyan),var(--magenta));
+  }
+
+  /* ── PIPELINE ── */
+  .pipeline-section{padding:64px 0}
+  .pipeline{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+    position:relative;
+  }
+  .pipeline::before{
+    content:'';position:absolute;top:32px;left:12.5%;right:12.5%;height:2px;
+    background:linear-gradient(90deg,var(--cyan),#7c6cff,var(--magenta),var(--green));
+    z-index:0;
+  }
+  .phase{
+    position:relative;text-align:center;padding:0 12px;
+  }
+  .phase-icon{
+    width:64px;height:64px;border-radius:50%;margin:0 auto 20px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;position:relative;z-index:1;
+    border:2px solid;
+    transition:transform .3s,box-shadow .3s;
+  }
+  .phase:hover .phase-icon{transform:scale(1.12)}
+  .phase:nth-child(1) .phase-icon{
+    background:#0f1d24;border-color:var(--cyan);
+    box-shadow:var(--glow-cyan);color:var(--cyan);
+  }
+  .phase:nth-child(2) .phase-icon{
+    background:#131020;border-color:#7c6cff;
+    box-shadow:0 0 20px rgba(124,108,255,.15);color:#7c6cff;
+  }
+  .phase:nth-child(3) .phase-icon{
+    background:#1a1018;border-color:var(--magenta);
+    box-shadow:var(--glow-magenta);color:var(--magenta);
+  }
+  .phase:nth-child(4) .phase-icon{
+    background:#0c1a12;border-color:var(--green);
+    box-shadow:var(--glow-green);color:var(--green);
+  }
+  .phase-number{
+    font-family:var(--mono);font-size:11px;letter-spacing:1px;
+    text-transform:uppercase;margin-bottom:6px;
+  }
+  .phase:nth-child(1) .phase-number{color:var(--cyan)}
+  .phase:nth-child(2) .phase-number{color:#7c6cff}
+  .phase:nth-child(3) .phase-number{color:var(--magenta)}
+  .phase:nth-child(4) .phase-number{color:var(--green)}
+  .phase h3{font-size:1.05rem;font-weight:700;margin-bottom:12px}
+  .phase ul{
+    list-style:none;text-align:left;font-size:.82rem;
+    color:var(--text-muted);line-height:1.7;
+  }
+  .phase li::before{
+    content:'\25B8';margin-right:6px;
+  }
+  .phase:nth-child(1) li::before{color:var(--cyan)}
+  .phase:nth-child(2) li::before{color:#7c6cff}
+  .phase:nth-child(3) li::before{color:var(--magenta)}
+  .phase:nth-child(4) li::before{color:var(--green)}
+
+  /* arrow connectors between phases */
+  .phase:not(:last-child)::after{
+    content:'\276F';position:absolute;right:-8px;top:32px;
+    transform:translateY(-50%);
+    font-size:18px;color:var(--text-dim);z-index:2;
+    line-height:1;
+  }
+
+  /* ── FEATURES GRID ── */
+  .features-section{padding:64px 0}
+  .features-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;
+  }
+  .feature-card{
+    background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+    padding:24px 28px;transition:border-color .3s,transform .3s,box-shadow .3s;
+    position:relative;overflow:hidden;
+  }
+  .feature-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--cyan),var(--magenta));
+    opacity:0;transition:opacity .3s;
+  }
+  .feature-card:hover{
+    border-color:rgba(0,212,255,.3);transform:translateY(-2px);
+    box-shadow:0 8px 32px rgba(0,0,0,.3);
+  }
+  .feature-card:hover::before{opacity:1}
+  .feature-icon{
+    font-size:24px;margin-bottom:12px;display:block;
+  }
+  .feature-card h4{
+    font-size:.95rem;font-weight:600;margin-bottom:6px;
+  }
+  .feature-card p{
+    font-size:.82rem;color:var(--text-muted);line-height:1.6;
+  }
+  .feature-card:nth-child(1) .feature-icon{color:var(--cyan)}
+  .feature-card:nth-child(2) .feature-icon{color:var(--green)}
+  .feature-card:nth-child(3) .feature-icon{color:var(--yellow)}
+  .feature-card:nth-child(4) .feature-icon{color:var(--magenta)}
+  .feature-card:nth-child(5) .feature-icon{color:#7c6cff}
+  .feature-card:nth-child(6) .feature-icon{color:var(--cyan)}
+
+  /* ── USAGE BOX ── */
+  .usage-section{padding:48px 0}
+  .usage-box{
+    background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+    padding:32px;max-width:800px;margin:0 auto;position:relative;
+    overflow:hidden;
+  }
+  .usage-box::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--green),var(--cyan));
+  }
+  .usage-label{
+    font-family:var(--mono);font-size:12px;color:var(--green);
+    text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .usage-label::before{content:'\25B6';font-size:10px}
+  .usage-code{
+    background:#0d1117;border:1px solid var(--border);border-radius:8px;
+    padding:20px 24px;font-family:var(--mono);font-size:clamp(.75rem,1.5vw,.9rem);
+    color:var(--text);overflow-x:auto;white-space:pre;line-height:1.8;
+  }
+  .usage-code .cmd{color:var(--green)}
+  .usage-code .arg{color:var(--yellow)}
+  .usage-code .flag{color:var(--cyan)}
+  .usage-code .val{color:var(--magenta)}
+
+  /* ── STATS ── */
+  .stats-section{padding:48px 0 32px}
+  .stats-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:20px;
+    max-width:900px;margin:0 auto;
+  }
+  .stat{
+    text-align:center;padding:28px 16px;
+    background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+    position:relative;overflow:hidden;
+    transition:transform .3s,box-shadow .3s;
+  }
+  .stat:hover{
+    transform:translateY(-3px);
+    box-shadow:0 6px 24px rgba(0,0,0,.3);
+  }
+  .stat::before{
+    content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  }
+  .stat:nth-child(1)::before{background:var(--cyan)}
+  .stat:nth-child(2)::before{background:var(--magenta)}
+  .stat:nth-child(3)::before{background:var(--green)}
+  .stat:nth-child(4)::before{background:var(--yellow)}
+  .stat-value{
+    font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;
+    font-family:var(--mono);line-height:1;margin-bottom:8px;
+  }
+  .stat:nth-child(1) .stat-value{color:var(--cyan)}
+  .stat:nth-child(2) .stat-value{color:var(--magenta)}
+  .stat:nth-child(3) .stat-value{color:var(--green)}
+  .stat:nth-child(4) .stat-value{color:var(--yellow)}
+  .stat-label{
+    font-size:.78rem;color:var(--text-muted);line-height:1.4;
+  }
+  .stat-context{
+    font-size:.65rem;color:var(--text-dim);margin-top:4px;
+    font-family:var(--mono);
+  }
+
+  /* ── TECH STACK FOOTER ── */
+  .footer{
+    border-top:1px solid var(--border);padding:40px 24px 48px;
+    text-align:center;margin-top:32px;
+  }
+  .footer-label{
+    font-size:12px;text-transform:uppercase;letter-spacing:2px;
+    color:var(--text-dim);margin-bottom:20px;
+  }
+  .tech-stack{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:12px;
+    margin-bottom:28px;
+  }
+  .tech-tag{
+    font-family:var(--mono);font-size:.82rem;
+    padding:8px 20px;border-radius:8px;
+    background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.18);
+    color:var(--cyan);transition:background .3s,border-color .3s;
+    text-decoration:none;cursor:pointer;
+  }
+  .tech-tag:hover{
+    background:rgba(0,212,255,.12);border-color:rgba(0,212,255,.35);
+  }
+
+  /* ── INSTALL SECTION ── */
+  .install-section{padding:48px 0 16px}
+  .install-box{
+    background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+    padding:32px;max-width:860px;margin:0 auto;position:relative;overflow:hidden;
+  }
+  .install-box::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--magenta),var(--cyan));
+  }
+  .install-box h3{
+    font-size:1.1rem;font-weight:700;margin-bottom:20px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .install-box h3 span{color:var(--magenta)}
+  .install-steps{list-style:none;counter-reset:step}
+  .install-steps li{
+    counter-increment:step;margin-bottom:16px;
+    font-size:.88rem;color:var(--text-muted);line-height:1.6;
+    padding-left:32px;position:relative;
+  }
+  .install-steps li::before{
+    content:counter(step);position:absolute;left:0;top:0;
+    width:22px;height:22px;border-radius:50%;font-size:.72rem;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);
+    color:var(--cyan);font-family:var(--mono);font-weight:700;
+  }
+  .install-steps code{
+    font-family:var(--mono);font-size:.82rem;
+    background:#0d1117;border:1px solid var(--border);border-radius:6px;
+    padding:3px 10px;color:var(--green);display:inline-block;margin:4px 0;
+  }
+  .install-steps .note{
+    font-size:.78rem;color:var(--text-dim);font-style:italic;margin-top:4px;
+  }
+  .footer-credit{
+    font-size:.75rem;color:var(--text-dim);margin-top:16px;
+  }
+  .footer-credit a{color:var(--cyan);text-decoration:none}
+  .footer-credit a:hover{text-decoration:underline}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:900px){
+    .pipeline{grid-template-columns:1fr 1fr;gap:32px 0}
+    .pipeline::before{display:none}
+    .phase:not(:last-child)::after{display:none}
+    .stats-grid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:600px){
+    .hero{padding:56px 16px 40px}
+    .pipeline{grid-template-columns:1fr;gap:36px}
+    .features-grid{grid-template-columns:1fr}
+    .stats-grid{grid-template-columns:1fr 1fr}
+    .usage-box{padding:20px}
+    .usage-code{font-size:.72rem;padding:14px 16px}
+  }
+
+  /* ── SUBTLE ANIMATIONS ── */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+  .hero,.pipeline-section,.features-section,.usage-section,.stats-section,.footer{
+    animation:fadeUp .6s ease both;
+  }
+  .pipeline-section{animation-delay:.1s}
+  .features-section{animation-delay:.15s}
+  .usage-section{animation-delay:.2s}
+  .stats-section{animation-delay:.25s}
+  .footer{animation-delay:.3s}
+
+  /* ── SCAN LINE EFFECT (subtle) ── */
+  body::after{
+    content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+    pointer-events:none;z-index:9999;
+    background:repeating-linear-gradient(
+      0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px
+    );
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-badge">Claude Code Skill</div>
+    <h1>/live-workshop<span> Skill</span></h1>
+    <p class="hero-subtitle">
+      Turn any lecture into a structured, searchable knowledge base — <em>in real time.</em>
+    </p>
+  </div>
+</header>
+
+<!-- ===== PIPELINE ===== -->
+<section class="pipeline-section">
+  <div class="container">
+    <div class="section-heading">
+      <h2>Four-Phase Pipeline</h2>
+      <p>From raw audio to organized, publishable knowledge</p>
+      <div class="line"></div>
+    </div>
+
+    <div class="pipeline">
+
+      <!-- PHASE 1 -->
+      <div class="phase">
+        <div class="phase-icon">&#9881;</div>
+        <div class="phase-number">Phase 1</div>
+        <h3>INIT</h3>
+        <ul>
+          <li>Creates JupyterBook project structure</li>
+          <li>Auto-fetches agenda from workshop URL</li>
+          <li>Git repo with proper .gitignore</li>
+          <li>Modular: theory / tools / exercises per topic</li>
+        </ul>
+      </div>
+
+      <!-- PHASE 2 -->
+      <div class="phase">
+        <div class="phase-icon">&#9835;</div>
+        <div class="phase-number">Phase 2</div>
+        <h3>RECORD</h3>
+        <ul>
+          <li>Live audio capture via sox (configurable chunks)</li>
+          <li>Real-time Whisper transcription (tiny&#8594;turbo)</li>
+          <li>Multi-language support (default: Polish)</li>
+          <li>Keyword extraction with custom categories</li>
+        </ul>
+      </div>
+
+      <!-- PHASE 3 -->
+      <div class="phase">
+        <div class="phase-icon">&#128194;</div>
+        <div class="phase-number">Phase 3</div>
+        <h3>ORGANIZE</h3>
+        <ul>
+          <li>Auto-classifies notes into correct module</li>
+          <li>Updates daily journal with structured entries</li>
+          <li>Cross-references via {doc} directives</li>
+          <li>Git commits after every meaningful update</li>
+        </ul>
+      </div>
+
+      <!-- PHASE 4 -->
+      <div class="phase">
+        <div class="phase-icon">&#129504;</div>
+        <div class="phase-number">Phase 4</div>
+        <h3>ANALYZE</h3>
+        <ul>
+          <li>Iterative transcript analysis on demand</li>
+          <li>Decodes Whisper transcription errors</li>
+          <li>Extracts pedagogical insights from speaker</li>
+          <li>Builds error tables for quality assessment</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== KEY FEATURES ===== -->
+<section class="features-section">
+  <div class="container">
+    <div class="section-heading">
+      <h2>Key Features</h2>
+      <p>Everything you need for real-time workshop documentation</p>
+      <div class="line"></div>
+    </div>
+
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <span class="feature-icon">&#128214;</span>
+        <h4>JupyterBook Output</h4>
+        <p>Generates a publishable HTML book with table of contents, cross-references, and structured chapters. Ready to host on GitHub Pages.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">&#9608;</span>
+        <h4>Live Terminal Prompter</h4>
+        <p>Real-time colored keyword tags stream to your terminal as audio is processed. Instant visual feedback on what the speaker is covering.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">&#128301;</span>
+        <h4>Selective Keyword Detection</h4>
+        <p>Customizable keyword categories per workshop topic. Filter signal from noise with domain-specific vocabulary lists.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">&#127463;&#127473;</span>
+        <h4>~70-80% Non-English Accuracy</h4>
+        <p>Optimized for real-world non-English transcription. Handles mixed-language lectures, technical jargon, and accented speech.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">&#128257;</span>
+        <h4>Automatic Deduplication</h4>
+        <p>Detects and skips duplicate transcript analysis. No wasted computation when re-processing previously analyzed fragments.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">&#128274;</span>
+        <h4>Works Fully Offline</h4>
+        <p>Local Whisper models, no cloud API needed. Your audio and transcripts never leave your machine. Complete data sovereignty.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== USAGE ===== -->
+<section class="usage-section">
+  <div class="container">
+    <div class="usage-box">
+      <div class="usage-label">Quick Start</div>
+      <div class="usage-code"><span class="cmd">/live-workshop</span> <span class="arg">"Cybersecurity 101"</span> <span class="flag">--url</span> <span class="val">https://workshop.example.com</span> <span class="flag">--lang</span> <span class="val">en</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== INSTALL ===== -->
+<section class="install-section">
+  <div class="container">
+    <div class="install-box">
+      <h3><span>&#9662;</span> How to Install This Skill</h3>
+      <ol class="install-steps">
+        <li>
+          Install <a href="https://docs.anthropic.com/en/docs/claude-code" style="color:var(--cyan);text-decoration:none">Claude Code</a> if you don't have it yet:
+          <code>npm install -g @anthropic-ai/claude-code</code>
+        </li>
+        <li>
+          Clone the skill into your Claude skills directory:
+          <code>git clone https://github.com/bnaskrecki/live-workshop-skill.git ~/.claude/skills/live-workshop</code>
+          <div class="note">Or manually copy the SKILL.md and templates/ folder into ~/.claude/skills/live-workshop/</div>
+        </li>
+        <li>
+          Install audio dependencies:
+          <code>brew install sox ffmpeg && pip3 install openai-whisper jupyter-book</code>
+          <div class="note">On Linux: apt install sox ffmpeg</div>
+        </li>
+        <li>
+          Navigate to any project directory and invoke:
+          <code>/live-workshop "Your Workshop Title" --lang en --modules "Topic1,Topic2"</code>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-label">Tech Stack</div>
+    <div class="tech-stack">
+      <a class="tech-tag" href="https://sox.sourceforge.net/" target="_blank" rel="noopener">sox</a>
+      <a class="tech-tag" href="https://github.com/openai/whisper" target="_blank" rel="noopener">Whisper</a>
+      <a class="tech-tag" href="https://jupyterbook.org/" target="_blank" rel="noopener">JupyterBook</a>
+      <a class="tech-tag" href="https://git-scm.com/" target="_blank" rel="noopener">Git</a>
+      <a class="tech-tag" href="https://www.python.org/" target="_blank" rel="noopener">Python</a>
+      <a class="tech-tag" href="https://www.zsh.org/" target="_blank" rel="noopener">zsh</a>
+    </div>
+    <div class="footer-credit">
+      A <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a> custom skill &middot; Cybersecurity Workshop WMI 2026
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
